@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Drawing;
-using System.Windows.Forms;
 using System.IO;
 using System.Drawing.Imaging;
 using System.Collections;
+using System.Diagnostics;
 
 namespace ImageEncryptors
 {
@@ -15,30 +15,44 @@ namespace ImageEncryptors
     {
         static void Main(string[] args)
         {
+            DotNetEnv.Env.Load();
+            List<int> secretKeyList = new List<int>();
+
             // Image image = Image.FromFile("../../Images/bitcoin.jpg");
             Encoding enc8 = Encoding.Default;
 
-            Bitmap img = new Bitmap("../../Images/bitcoin.jpg");
+            Bitmap img = new Bitmap("../../Images/color.bmp");
             //get byte data of selected image
             byte[] byteImage = ImageToByte(img);
             //get bits of image
             BitArray bitArray = new BitArray(byteImage);
 
-            // resize byte and Bit arrays
-            //Array.Resize<byte>(ref byteImage, (byteImage.Length)+1);
-            //bitArray.Length += 8;
+            string start = Environment.GetEnvironmentVariable("SECRET");
 
-            // create secret messge bits
-            Message msg = new Message("test");
-            BitArray msgBits = msg.GetMessageBits();
-
-            for(int i = 0; i < bitArray.Length; i++)
-            {
-                if(i >= 1600 && i <= 1600 + (msgBits.Length-1))
-                {
-                    bitArray[i] = msgBits[i-1600];       
+            string[] key = start.Split(',');
+            foreach(string keyStr in key) {
+                int firstPosition;
+                bool isInt = int.TryParse(keyStr, out firstPosition);
+                if (!isInt) {
+                    throw new Exception("Key is not valid");
                 }
+                secretKeyList.Add(firstPosition);
             }
+
+            // create first secret messge bits
+            Message msg = new Message("w");
+            msg.InsertMessage(secretKeyList, ref bitArray);
+            string str2 = msg.GetMessage(secretKeyList, ref bitArray);
+
+            // create second secret messge bits
+            Message msg2 = new Message("o");
+            msg2.InsertMessage(secretKeyList, ref bitArray);
+            string str3 = msg2.GetMessage(secretKeyList, ref bitArray);
+
+            //string str2 = System.Text.Encoding.Default.GetString(ll);
+            Console.WriteLine(str2);
+            Console.WriteLine(str3);
+
 
             Array.Clear(byteImage, 0, byteImage.Length);
             // copy manippulated bits to byte array of image
@@ -50,44 +64,14 @@ namespace ImageEncryptors
             // create new identical image
             Bitmap x = (Bitmap)((new ImageConverter()).ConvertFrom(byteImage));
             //save new image
-            x.Save("../../Images/bitcoin_1.bmp");
-
-            // find difference in base64 strings of original image and manuplated image
-            //FindDiffrence(origin, current);
+            x.Save("../../Images/color_1.bmp");
 
             Console.WriteLine("Process Done!");
             Console.ReadKey();
 
         }
 
-        private static void FindDiffrence(string a, string b)
-        {
-
-            File.WriteAllText("../../Images/origin.txt", a);
-            File.WriteAllText("../../Images/current.txt", b);
-
-            if (a.Equals(b))
-                Console.WriteLine("Nothing changed!!!!");
-
-            char[] originChar = a.ToCharArray();
-            char[] currentChar = b.ToCharArray();
-
-            Console.WriteLine("originChar   Length:   {0}", originChar.Length);
-            Console.WriteLine("currentChar   Length:   {0}", currentChar.Length);
-
-            for (int h = 0; h < originChar.Length; h++)
-            {
-                if (originChar[h] != currentChar[h])
-                {
-                    Console.WriteLine("diff is in index {0} and char is {1}", h, currentChar[h]);
-                }
-
-            }
-        }
-
-
-        public static void PrintValues(IEnumerable myList, int myWidth)
-        {
+        public static void PrintValues(IEnumerable myList, int myWidth) {
             int i = myWidth;
             foreach (Object obj in myList)
             {
@@ -102,19 +86,12 @@ namespace ImageEncryptors
             Console.WriteLine();
         }
 
-        public static byte[] ImageToByte(Image img)
-        {
+        public static byte[] ImageToByte(Image img) {
             ImageConverter converter = new ImageConverter();
             return (byte[])converter.ConvertTo(img, typeof(byte[]));
         }
 
-        public static string ToReadableByteArray(byte[] bytes)
-        {
-            return string.Join(", ", bytes);
-        }
-
-        public static string ImageToBase64(string path)
-        {
+        public static string ImageToBase64(string path) {
             string base64String = "";
             using (Image image = Image.FromFile(path))
             {
@@ -127,8 +104,7 @@ namespace ImageEncryptors
                 }
             }
         }
-        public static Image Base64ToImage(string base64String)
-        {
+        public static Image Base64ToImage(string base64String) {
             byte[] imageBytes = Convert.FromBase64String(base64String);
             MemoryStream ms = new MemoryStream(imageBytes, 0, imageBytes.Length);
             ms.Write(imageBytes, 0, imageBytes.Length);
@@ -136,8 +112,7 @@ namespace ImageEncryptors
             return image;
         }
 
-        public byte[] stringToByteArray(string source)
-        {
+        public byte[] stringToByteArray(string source) {
             byte[] bytes = Encoding.Default.GetBytes(source);
             return bytes;
         }
@@ -146,3 +121,33 @@ namespace ImageEncryptors
 }
 
 
+
+//for (int i = 0; i < bitArray.Length; i++) {
+//    if(i >= secretKeyList[0] && i <= secretKeyList[0] + (msgBits.Length-1))
+//    {
+//        bitArray[i] = msgBits[i- secretKeyList[0]];       
+//    }
+//}
+
+// create second secret messge bits
+//Message msg2 = new Message("talkhakislaughingateveryone");
+//BitArray msgBits2 = msg2.GetMessageBits();
+
+//for (int i = 0; i < bitArray.Length; i++) {
+//    if (i >= secretKeyList[2] && i <= secretKeyList[2] + (msgBits2.Length - 1)) {
+//        bitArray[i] = msgBits2[i - secretKeyList[2]];
+//    }
+//}
+
+// create second secret messge bits
+//Message msg3 = new Message("talkhak_is_laughing");
+//BitArray msgBits3 = msg3.GetMessageBits();
+
+//for (int i = 0; i < bitArray.Length; i++) {
+//    if (i >= secretKeyList[4] && i <= secretKeyList[4] + (msgBits3.Length - 1)) {
+//        bitArray[i] = msgBits3[i - secretKeyList[4]];
+//    }
+//}
+
+//string str2 = System.Text.Encoding.Default.GetString(ll);
+//Console.WriteLine(str2);
