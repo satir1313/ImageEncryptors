@@ -17,8 +17,6 @@ namespace ImageEncryptors
         {
             DotNetEnv.Env.Load();
             List<int> secretKeyList = new List<int>();
-
-            // Image image = Image.FromFile("../../Images/bitcoin.jpg");
             Encoding enc8 = Encoding.Default;
 
             Bitmap img = new Bitmap("../../Images/color.bmp");
@@ -27,7 +25,7 @@ namespace ImageEncryptors
             //get bits of image
             BitArray bitArray = new BitArray(byteImage);
 
-            string start = Environment.GetEnvironmentVariable("SECRET");
+            string start = Environment.GetEnvironmentVariable("FIRST_LETTER");
 
             string[] key = start.Split(',');
             foreach(string keyStr in key) {
@@ -43,15 +41,24 @@ namespace ImageEncryptors
             Message msg = new Message("w");
             msg.InsertMessage(secretKeyList, ref bitArray);
             string str2 = msg.GetMessage(secretKeyList, ref bitArray);
+            secretKeyList.RemoveAll(secretKeyList.Contains);
+
+            string second = Environment.GetEnvironmentVariable("SECOND_LETTER");
+            string[] key2 = second.Split(',');
+            foreach (string keyStr in key2) {
+                int secondtPosition;
+                bool isInt = int.TryParse(keyStr, out secondtPosition);
+                if (!isInt) {
+                    throw new Exception("Key is not valid");
+                }
+                secretKeyList.Add(secondtPosition);
+            }
 
             // create second secret messge bits
             Message msg2 = new Message("o");
             msg2.InsertMessage(secretKeyList, ref bitArray);
             string str3 = msg2.GetMessage(secretKeyList, ref bitArray);
-
-            //string str2 = System.Text.Encoding.Default.GetString(ll);
-            Console.WriteLine(str2);
-            Console.WriteLine(str3);
+            secretKeyList.RemoveAll(secretKeyList.Contains);
 
 
             Array.Clear(byteImage, 0, byteImage.Length);
