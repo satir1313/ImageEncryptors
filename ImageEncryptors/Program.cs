@@ -19,7 +19,7 @@ namespace ImageEncryptors
             List<int> secretKeyList = new List<int>();
             Encoding enc8 = Encoding.Default;
 
-            Bitmap img = new Bitmap("../../Images/color.bmp");
+            Bitmap img = new Bitmap("../../Images/land.bmp");
             //get byte data of selected image
             byte[] byteImage = ImageToByte(img);
             //get bits of image
@@ -60,6 +60,38 @@ namespace ImageEncryptors
             string str3 = msg2.GetMessage(secretKeyList, ref bitArray);
             secretKeyList.RemoveAll(secretKeyList.Contains);
 
+            // create third message upon size of image
+            Message msg3 = new Message("K");
+            ImageMath image = new ImageMath(img);
+            msg3.InsertMessageInImage(ref bitArray, image);
+
+            var s = msg3.GetMessageLong(image.GetKeyPosition(), ref bitArray);
+            Console.WriteLine(s);
+
+
+            // insert .exe file
+            Message msgFile = new Message();
+            byte[] buffer = File.ReadAllBytes("../../Images/CDDriver.exe");
+            BitArray fileBits = new BitArray(buffer);
+            List<long> keyis = image.GetKeyPosition();
+
+            msgFile.InsertMessage(keyis, ref bitArray, fileBits);
+
+            // read back the .exe file
+            msgFile.GetMessageFile(keyis, ref bitArray, fileBits);
+
+
+
+            //string base64Encoded = Convert.ToBase64String(buffer);
+            //// TODO: do something with the bas64 encoded string
+
+            //buffer = Convert.FromBase64String(base64Encoded);
+            //File.WriteAllBytes(@"c:\2.exe", buffer);
+
+
+
+
+
 
             Array.Clear(byteImage, 0, byteImage.Length);
             // copy manippulated bits to byte array of image
@@ -71,7 +103,7 @@ namespace ImageEncryptors
             // create new identical image
             Bitmap x = (Bitmap)((new ImageConverter()).ConvertFrom(byteImage));
             //save new image
-            x.Save("../../Images/color_1.bmp");
+            x.Save("../../Images/land_1.bmp");
 
             Console.WriteLine("Process Done!");
             Console.ReadKey();
