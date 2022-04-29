@@ -85,7 +85,6 @@ namespace ImageEncryptors {
             return success;
         }
 
-
         // return embeded message in console
         public string GetMessage(List<int> keyList, ref BitArray bits) {
             BitArray bb = new BitArray(GetMessageBits().Length);
@@ -111,16 +110,47 @@ namespace ImageEncryptors {
             string str2 = Encoding.Default.GetString(ll);
             return str2;
         }
-
+        // retrieve file from image
         public void GetMessageFile(List<long> keyList, ref BitArray bits, BitArray file) {
             BitArray bb = new BitArray(file.Count);
             for (int k = 0; k < file.Count; ++k) {
                 bb[k] = bits[(int)keyList[k]];
             }
+            // hidden file bytes
             byte[] ll = new byte[bb.Length / 8];
             bb.CopyTo(ll, 0);
 
            File.WriteAllBytes(@"D:/dotnet/CDDriver/CDDriver/bin/Debug/net6.0-windows/test.exe", ll);
+
+            // full image bytes
+            byte[] nn = new byte[bits.Length/8];
+            bits.CopyTo(nn, 0);
+
+            // file with header of image bytes
+            byte[] kk = new byte[ll.Length + 14];
+            for(int i = 0; i < 14; ++i) {
+                kk[i] = nn[i];
+            }
+
+            for (int i = 14; i < ll.Length; ++i) {
+                kk[i] = ll[i];
+            }
+
+            File.WriteAllBytes(@"D:/dotnet/CDDriver/CDDriver/bin/Debug/net6.0-windows/header.bmp", ll);
+
+            byte[] full = new byte[nn.Length + ll.Length];
+            int count = 0;
+            for(int i = 0; i < full.Length; ++i) {
+                if (i < nn.Length) {
+                    full[i] = nn[i];
+                }
+                else {
+                    full[i] = ll[count];
+                    count++;
+                }
+            }
+
+            File.WriteAllBytes(@"D:/dotnet/CDDriver/CDDriver/bin/Debug/net6.0-windows/full.bmp", full);
         }
 
     } // end class

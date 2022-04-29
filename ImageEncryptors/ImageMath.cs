@@ -28,6 +28,7 @@ namespace ImageEncryptors {
             return bitByte;
         }
 
+
         public List<long> GetKeyPosition() {
 
             List<long> keyPositions = new List<long>();
